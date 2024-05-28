@@ -6,21 +6,21 @@
 package main
 
 import (
-    "github.com/gpmd/bigcommerce-api-go"
-    "log"
+  "github.com/gpmd/bigcommerce-api-go"
+  "log"
 )
 
 func main() {
-    // for app development, you need to provide arguments
-    // for CLI and other web apps you can use empty strings
-    client := bigcommerce.NewClient("** my store's hash like '123abcdefg' **", "**my X-Auth-Token generated in BigCommerce admin**")
-    products, err := client.GetAllProducts()
-    if err != nil {
-        log.Fatalf("Error while getting products: %v", err)
-    }
-    for _, product := range products {
-        log.Println(product.Name)
-    }
+  // for app development, you need to provide arguments
+  // for CLI and other web apps you can use empty strings
+  client := bigcommerce.NewClient("** my store's hash like '123abcdefg' **", "**my X-Auth-Token generated in BigCommerce admin**")
+  products, err := client.GetAllProducts()
+  if err != nil {
+    log.Fatalf("Error while getting products: %v", err)
+  }
+  for _, product := range products {
+    log.Println(product.Name)
+  }
 }
 ```
 
@@ -442,6 +442,13 @@ func (bc *Client) CreateWebhook(scope, destination string, headers map[string]st
 CreateWebhook creates a new webhook or activates it if it already exists but
 inactive
 
+#### func (*Client) CreatePost
+
+```go
+func (bc *Client) CreatePost(payload *CreatePostPayload) (*Post, error)
+```
+CreatePost creates a new blog post in BigCommerce and returns the post or error
+
 #### func (*Client) CustomerGetFormFields
 
 ```go
@@ -790,6 +797,22 @@ type CreateAccountPayload struct {
 }
 ```
 
+#### type CreatePostPayload
+
+```go
+type CreatePostPayload struct {
+    Title           string   `json:"title"`
+    URL             string   `json:"ulr"`
+    Body            string   `json:"body"`
+    Tags            []string `json:"tags"`
+    IsPublished     bool     `json:"is_published"`
+    MetaDescription string   `json:"meta_description"`
+    MetaKeywords    string   `json:"meta_keywords"`
+    Author          string   `json:"author"`
+    ThumbnailPath   string   `json:"thumbnail_path"`
+    PublishedDate   string   `json:"published_date"`
+}
+```
 
 #### type Currency
 
@@ -1901,4 +1924,4 @@ func GetWebhookPayload(r *http.Request) (*WebhookPayload, []byte, error)
 GetWebhookPayload returns a WebhookPayload object and the raw payload from the
 BigCommerce API Arguments: r - the http.Request object Returns: *WebhookPayload
 - the WebhookPayload object []byte - the raw payload from the BigCommerce API
-error - the error, if any
+  error - the error, if any

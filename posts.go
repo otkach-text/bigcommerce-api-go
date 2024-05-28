@@ -1,11 +1,14 @@
 package bigcommerce
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Post is a BC blog post
@@ -24,6 +27,19 @@ type Post struct {
 	MetaKeywords         string      `json:"meta_keywords"`
 	Author               string      `json:"author"`
 	ThumbnailPath        string      `json:"thumbnail_path"`
+}
+
+type CreatePostPayload struct {
+	Title           string   `json:"title,omitempty"`
+	URL             string   `json:"ulr,omitempty"`
+	Body            string   `json:"body,omitempty"`
+	Tags            []string `json:"tags,omitempty"`
+	IsPublished     bool     `json:"is_published,omitempty"`
+	MetaDescription string   `json:"meta_description,omitempty"`
+	MetaKeywords    string   `json:"meta_keywords,omitempty"`
+	Author          string   `json:"author,omitempty"`
+	ThumbnailPath   string   `json:"thumbnail_path,omitempty"`
+	PublishedDate   string   `json:"published_date,omitempty"`
 }
 
 // GetAllPosts downloads all posts from BigCommerce, handling pagination
@@ -74,4 +90,44 @@ func (bc *Client) GetPosts(page int) ([]Post, bool, error) {
 		return nil, false, err
 	}
 	return pp, len(pp) == 250, nil
+}
+
+// CreatePost creates a new blog post in BigCommerce and returns the post or error
+func (bc *Client) CreatePost(payload *CreatePostPayload) (*Post, error) {
+	var b []byte
+	b, _ = json.Marshal([]CreatePostPayload{*payload})
+	req := bc.getAPIRequest(http.MethodPost, "/v2/blog/posts", bytes.NewBuffer(b))
+	res, err := bc.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	body, err := processBody(res)
+	if err != nil {
+		if res.StatusCode == http.StatusUnprocessableEntity {
+			var errResp ErrorResult
+			err = json.Unmarshal(body, &errResp)
+			if err != nil {
+				log.Printf("Error: %s\nResult: %s", err, string(body))
+				return nil, err
+			}
+			if len(errResp.Errors) > 0 {
+				errors := []string{}
+				for _, e := range errResp.Errors {
+					errors = append(errors, e)
+				}
+				return nil, fmt.Errorf("%s", strings.Join(errors, ", "))
+			}
+			return nil, errors.New("unknown error")
+		}
+		log.Printf("Error: %s\nResult: %s", err, string(body))
+		return nil, err
+	}
+
+	var ret Post
+	err = json.Unmarshal(body, &ret)
+	if err != nil {
+		return nil, err
+	}
+	return &ret, nil
 }

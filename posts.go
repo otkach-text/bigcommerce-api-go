@@ -30,9 +30,9 @@ type Post struct {
 }
 
 type CreatePostPayload struct {
-	Title           string   `json:"title,omitempty"`
-	URL             string   `json:"ulr,omitempty"`
-	Body            string   `json:"body,omitempty"`
+	Title           string   `json:"title" validate:"required"`
+	URL             string   `json:"url,omitempty"`
+	Body            string   `json:"body" validate:"required"`
 	Tags            []string `json:"tags,omitempty"`
 	IsPublished     bool     `json:"is_published,omitempty"`
 	MetaDescription string   `json:"meta_description,omitempty"`

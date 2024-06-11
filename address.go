@@ -12,19 +12,19 @@ import (
 // Address is for Customer Address endpoint
 type Address struct {
 	ID              int64       `json:"id,omitempty"`
-	CustomerID      int64       `json:"customer_id,omitempty"`
-	Address1        string      `json:"address1"`
+	CustomerID      int64       `json:"customer_id" validate:"required"`
+	Address1        string      `json:"address1" validate:"required"`
 	Address2        string      `json:"address2,omitempty"`
 	AddressType     string      `json:"address_type,omitempty"`
-	City            string      `json:"city"`
+	City            string      `json:"city" validate:"required"`
 	Company         string      `json:"company,omitempty"`
 	Country         string      `json:"country,omitempty"`
-	CountryCode     string      `json:"country_code"`
-	FirstName       string      `json:"first_name"`
-	LastName        string      `json:"last_name"`
+	CountryCode     string      `json:"country_code" validate:"required"`
+	FirstName       string      `json:"first_name" validate:"required"`
+	LastName        string      `json:"last_name" validate:"required"`
 	Phone           string      `json:"phone,omitempty"`
-	PostalCode      string      `json:"postal_code,omitempty"`
-	StateOrProvince string      `json:"state_or_province,omitempty"`
+	PostalCode      string      `json:"postal_cod" validate:"required"`
+	StateOrProvince string      `json:"state_or_province" validate:"required"`
 	FormFields      []FormField `json:"form_fields,omitempty"`
 }
 

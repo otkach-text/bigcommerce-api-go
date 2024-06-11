@@ -60,9 +60,9 @@ type SaveAccountPayload struct {
 
 type CreateAccountPayload struct {
 	Company                                 string         `json:"company,omitempty"`
-	FirstName                               string         `json:"first_name,omitempty"`
-	LastName                                string         `json:"last_name,omitempty"`
-	Email                                   string         `json:"email,omitempty"`
+	FirstName                               string         `json:"first_name" validate:"required"`
+	LastName                                string         `json:"last_name" validate:"required"`
+	Email                                   string         `json:"email" validate:"required"`
 	Phone                                   string         `json:"phone,omitempty"`
 	Notes                                   string         `json:"notes,omitempty"`
 	TaxExemptCategory                       string         `json:"tax_exempt_category,omitempty"`

@@ -1,12 +1,15 @@
 package bigcommerce
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -120,17 +123,27 @@ type Product struct {
 		BinPickingNumber          string        `json:"bin_picking_number,omitempty"`
 		OptionValues              []interface{} `json:"option_values,omitempty"`
 	} `json:"variants,omitempty"`
-	Images       []Image       `json:"images,omitempty"`
-	PrimaryImage interface{}   `json:"primary_image,omitempty"`
-	Videos       []interface{} `json:"videos,omitempty"`
-	CustomFields []struct {
-		ID    int64  `json:"id,omitempty"`
-		Name  string `json:"name,omitempty"`
-		Value string `json:"value,omitempty"`
-	} `json:"custom_fields,omitempty"`
-	BulkPricingRules []interface{} `json:"bulk_pricing_rules,omitempty"`
-	Options          []interface{} `json:"options,omitempty"`
-	Modifiers        []interface{} `json:"modifiers,omitempty"`
+	Images           []Image           `json:"images,omitempty"`
+	PrimaryImage     interface{}       `json:"primary_image,omitempty"`
+	Videos           []Video           `json:"videos,omitempty"`
+	CustomFields     []CustomField     `json:"custom_fields,omitempty"`
+	BulkPricingRules []BulkPricingRule `json:"bulk_pricing_rules,omitempty"`
+	Options          []interface{}     `json:"options,omitempty"`
+	Modifiers        []interface{}     `json:"modifiers,omitempty"`
+}
+
+type CustomField struct {
+	ID    int64  `json:"id,omitempty"`
+	Name  string `json:"name,omitempty" validate:"required"`
+	Value string `json:"value,omitempty" validate:"required"`
+}
+
+type BulkPricingRule struct {
+	ID          int64  `json:"id" validate:"required"`
+	QuantityMin int    `json:"quantity_min" validate:"required"`
+	QuantityMax int    `json:"quantity_max" validate:"required"`
+	Type        string `json:"type" validate:"required"`
+	Amount      string `json:"amount" validate:"required"`
 }
 
 // Metafield is a struct representing a BigCommerce product metafield
@@ -145,6 +158,109 @@ type Metafield struct {
 	DateModified  time.Time `json:"date_modified,omitempty"`
 	Namespace     string    `json:"namespace,omitempty"`
 	PermissionSet string    `json:"permission_set,omitempty"`
+}
+
+type CreateProductPayload struct {
+	Name                     string            `json:"name" validate:"required"`
+	Type                     string            `json:"type" validate:"required"`
+	SKU                      *string           `json:"sku,omitempty"`
+	Description              *string           `json:"description,omitempty"`
+	Weight                   *float64          `json:"weight" validate:"required"`
+	Width                    *float64          `json:"width,omitempty"`
+	Depth                    *float64          `json:"depth,omitempty"`
+	Height                   *float64          `json:"height,omitempty"`
+	Price                    *float64          `json:"price" validate:"required"`
+	CostPrice                *float64          `json:"cost_price,omitempty"`
+	RetailPrice              *float64          `json:"retail_price,omitempty"`
+	SalePrice                *float64          `json:"sale_price,omitempty"`
+	InventoryLevel           *int              `json:"inventory_level,omitempty"`
+	InventoryWarning         *int              `json:"inventory_warning_level,omitempty"`
+	InventoryTracking        string            `json:"inventory_tracking,omitempty"`
+	Availability             string            `json:"availability"`
+	AvailabilityDescription  *string           `json:"availability_description,omitempty"`
+	GiftWrappingOptionsType  *string           `json:"gift_wrapping_options_type,omitempty"`
+	GiftWrappingOptionsList  []int             `json:"gift_wrapping_options_list,omitempty"`
+	SortOrder                *int              `json:"sort_order,omitempty"`
+	Condition                *string           `json:"condition,omitempty"`
+	IsConditionShown         *bool             `json:"is_condition_shown,omitempty"`
+	Categories               []int             `json:"categories,omitempty"`
+	BrandID                  *int              `json:"brand_id,omitempty"`
+	MetaKeywords             *[]string         `json:"meta_keywords,omitempty"`
+	MetaDescription          *string           `json:"meta_description,omitempty"`
+	Images                   []Image           `json:"images,omitempty"`
+	Videos                   []Video           `json:"videos,omitempty"`
+	CustomFields             []CustomField     `json:"custom_fields,omitempty"`
+	BulkPricingRules         []BulkPricingRule `json:"bulk_pricing_rules,omitempty"`
+	OptionSetID              *int              `json:"option_set_id,omitempty"`
+	OptionSetDisplay         *string           `json:"option_set_display,omitempty"`
+	UPC                      *string           `json:"upc,omitempty"`
+	SearchKeywords           *string           `json:"search_keywords,omitempty"`
+	TaxClassID               *int              `json:"tax_class_id,omitempty"`
+	ViewCount                *int              `json:"view_count,omitempty"`
+	PreorderReleaseDate      *string           `json:"preorder_release_date,omitempty"`
+	PreorderMessage          *string           `json:"preorder_message,omitempty"`
+	OrderQuantityMinimum     *int              `json:"order_quantity_minimum,omitempty"`
+	OrderQuantityMaximum     *int              `json:"order_quantity_maximum,omitempty"`
+	PageTitle                *string           `json:"page_title,omitempty"`
+	IsVisible                *bool             `json:"is_visible,omitempty"`
+	IsFeatured               *bool             `json:"is_featured,omitempty"`
+	Warranty                 *string           `json:"warranty,omitempty"`
+	BinPickingNumber         *string           `json:"bin_picking_number,omitempty"`
+	LayoutFile               *string           `json:"layout_file,omitempty"`
+	UpSellingRelatedProducts *[]int            `json:"up_selling_related_products,omitempty"`
+	EventDateFieldName       *string           `json:"event_date_field_name,omitempty"`
+	EventDateType            *string           `json:"event_date_type,omitempty"`
+	EventDateStart           *string           `json:"event_date_start,omitempty"`
+	EventDateEnd             *string           `json:"event_date_end,omitempty"`
+	MyobAssetAccount         *string           `json:"myob_asset_account,omitempty"`
+	MyobExpenseAccount       *string           `json:"myob_expense_account,omitempty"`
+	MyobIncomeAccount        *string           `json:"myob_income_account,omitempty"`
+	XeroSalesAccount         *string           `json:"xero_sales_account,omitempty"`
+	XeroSalesTaxType         *string           `json:"xero_sales_tax_type,omitempty"`
+	XeroPurchaseAccount      *string           `json:"xero_purchase_account,omitempty"`
+	XeroPurchaseTaxType      *string           `json:"xero_purchase_tax_type,omitempty"`
+}
+
+// GetAllProducts gets all products from BigCommerce
+// args is a key-value map of additional arguments to pass to the API
+func (bc *Client) CreateProduct(payload *CreateProductPayload) (*Product, error) {
+	var b []byte
+	b, _ = json.Marshal([]CreateProductPayload{*payload})
+	req := bc.getAPIRequest(http.MethodPost, "/v3/catalog/products", bytes.NewBuffer(b))
+	res, err := bc.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	body, err := processBody(res)
+	if err != nil {
+		if res.StatusCode == http.StatusUnprocessableEntity {
+			var errResp ErrorResult
+			err = json.Unmarshal(body, &errResp)
+			if err != nil {
+				log.Printf("Error: %s\nResult: %s", err, string(body))
+				return nil, err
+			}
+			if len(errResp.Errors) > 0 {
+				errors := []string{}
+				for _, e := range errResp.Errors {
+					errors = append(errors, e)
+				}
+				return nil, fmt.Errorf("%s", strings.Join(errors, ", "))
+			}
+			return nil, errors.New("unknown error")
+		}
+		log.Printf("Error: %s\nResult: %s", err, string(body))
+		return nil, err
+	}
+	var ret struct {
+		Product Product `json:"data"`
+	}
+	err = json.Unmarshal(body, &ret)
+	if err != nil {
+		return nil, err
+	}
+	return &ret.Product, nil
 }
 
 // GetAllProducts gets all products from BigCommerce

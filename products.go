@@ -176,7 +176,7 @@ type CreateProductPayload struct {
 	InventoryLevel           *int              `json:"inventory_level,omitempty"`
 	InventoryWarning         *int              `json:"inventory_warning_level,omitempty"`
 	InventoryTracking        string            `json:"inventory_tracking,omitempty"`
-	Availability             string            `json:"availability"`
+	Availability             string            `json:"availability,omitempty"`
 	AvailabilityDescription  *string           `json:"availability_description,omitempty"`
 	GiftWrappingOptionsType  *string           `json:"gift_wrapping_options_type,omitempty"`
 	GiftWrappingOptionsList  []int             `json:"gift_wrapping_options_list,omitempty"`
